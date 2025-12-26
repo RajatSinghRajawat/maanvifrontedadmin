@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: maanvifronted
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: NODE_VERSION
+        value: 18.18.0
+      - key: VITE_API_URL
+        value: https://your-backend-url.onrender.com/api
+    staticPublishPath: ./dist
+
