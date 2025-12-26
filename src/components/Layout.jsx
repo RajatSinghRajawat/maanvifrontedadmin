@@ -7,10 +7,23 @@ import Employees from './Employees';
 import Attendence from './Attendence';
 import Enquiery from './Enquiery';
 import Setings from './Setings';
+import Profile from './Profile';
+import Logo from './Logo';
 
 const Layout = () => {
   const [activePage, setActivePage] = useState('Dashboard');
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
+  React.useEffect(() => {
+    const handleNavigateToProfile = () => {
+      setActivePage('Profile');
+    };
+
+    window.addEventListener('navigateToProfile', handleNavigateToProfile);
+    return () => {
+      window.removeEventListener('navigateToProfile', handleNavigateToProfile);
+    };
+  }, []);
 
   const navItems = useMemo(
     () => [
@@ -33,6 +46,8 @@ const Layout = () => {
         return <Enquiery />;
       case 'Setings':
         return <Setings />;
+      case 'Profile':
+        return <Profile />;
       default:
         return <Dashboards />;
     }
@@ -40,11 +55,8 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center ">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-gray-500">Mannvi Admin</p>
-          <p className="text-base font-semibold">Control Center</p>
-        </div>
+      <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <Logo size="small" />
         <button
           onClick={() => setIsMobileNavOpen((p) => !p)}
           className="p-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 transition"

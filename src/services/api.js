@@ -12,9 +12,12 @@ const buildQuery = (params = {}) => {
 };
 
 const request = async (path, options = {}) => {
+  const token = localStorage.getItem('token');
+  
   const res = await fetch(`${API_BASE}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...(options.headers || {}),
     },
     ...options,
@@ -36,6 +39,15 @@ const request = async (path, options = {}) => {
 };
 
 export const api = {
+  // Admin APIs
+  login: (payload) =>
+    request('/admin/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getCurrentAdmin: () => request('/admin/me'),
+  
+  // Employee APIs
   getEmployees: (params = {}) => request(`/employees${buildQuery(params)}`),
   getEmployeeMonthAttendance: (employeeId, month, year) =>
     request(`/attendance/employee/${employeeId}/month${buildQuery({ month, year })}`),
