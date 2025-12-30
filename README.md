@@ -27,7 +27,7 @@ npm run preview
    - **Build Command:** `npm install && npm run build`
    - **Publish Directory:** `dist`
    - **Environment Variables:**
-     - `VITE_API_URL` = `https://your-backend.onrender.com/api`
+     - `VITE_BACKEND_URL` = `https://your-backend.onrender.com/api`
 4. Click "Create Static Site"
 
 ### Option 2: Using render.yaml
@@ -41,7 +41,9 @@ The `render.yaml` file is already configured. Just connect your repo and Render 
 
 ## Environment Variables
 
-- `VITE_API_URL` - Backend API base URL (default: `http://localhost:5000/api`)
+- `VITE_BACKEND_URL` - Backend API base URL (default: `http://localhost:5000/api`)
+
+**Note:** Make sure to set this environment variable in Render dashboard before deploying.
 
 ## Troubleshooting
 
