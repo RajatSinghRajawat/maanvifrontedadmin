@@ -27,6 +27,7 @@ const request = async (path, options = {}) => {
   try {
     data = await res.json();
   } catch (err) {
+
     data = {};
   }
 
@@ -41,30 +42,30 @@ const request = async (path, options = {}) => {
 export const api = {
   // Admin APIs
   login: (payload) =>
-    request('/admin/login', {
+    request('/api/admin/login', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
-  getCurrentAdmin: () => request('/admin/me'),
+  getCurrentAdmin: () => request('/api/admin/me'),
   
   // Employee APIs
-  getEmployees: (params = {}) => request(`/employees${buildQuery(params)}`),
+  getEmployees: (params = {}) => request(`/api/employees${buildQuery(params)}`),
   getEmployeeMonthAttendance: (employeeId, month, year) =>
-    request(`/attendance/employee/${employeeId}/month${buildQuery({ month, year })}`),
+    request(`/api/attendance/employee/${employeeId}/month${buildQuery({ month, year })}`),
   setAttendance: (payload) =>
-    request('/attendance', {
+    request('/api/attendance', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
   deleteAttendance: (attendanceId) =>
-    request(`/attendance/${attendanceId}`, {
+    request(`/api/attendance/${attendanceId}`, {
       method: 'DELETE',
     }),
-  getAttendanceStats: (params = {}) => request(`/attendance/stats/overview${buildQuery(params)}`),
-  getEnquiries: (params = {}) => request(`/enquiries${buildQuery(params)}`),
-  getEnquiryStats: (params = {}) => request(`/enquiries/stats/overview${buildQuery(params)}`),
+  getAttendanceStats: (params = {}) => request(`/api/attendance/stats/overview${buildQuery(params)}`),
+  getEnquiries: (params = {}) => request(`/api/enquiries${buildQuery(params)}`),
+  getEnquiryStats: (params = {}) => request(`/api/enquiries/stats/overview${buildQuery(params)}`),
   createEmployee: (payload) =>
-    request('/employees', {
+    request('/api/employees', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
