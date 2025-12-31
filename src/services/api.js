@@ -69,6 +69,16 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  updateEmployee: (id, payload) =>
+    request(`/api/employees/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  deleteEmployee: (id) =>
+    request(`/api/employees/${id}`, {
+      method: 'DELETE',
+    }),
+  getEmployee: (id) => request(`/api/employees/${id}`),
 };
 
 export default api;

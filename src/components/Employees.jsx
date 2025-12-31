@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { FiPlus, FiUser, FiMail } from 'react-icons/fi';
+import { FiPlus, FiUser, FiMail, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { api } from '../services/api';
 import { toast } from '../utils/toast';
 
@@ -17,7 +17,11 @@ const Employees = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [deletingEmployee, setDeletingEmployee] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -48,6 +52,19 @@ const Employees = () => {
     fetchEmployees();
   }, [fetchEmployees]);
 
+  const resetForm = () => {
+    setForm({
+      name: '',
+      email: '',
+      role: '',
+      status: 'Active',
+      phone: '',
+      department: '',
+      joiningDate: '',
+      address: '',
+    });
+  };
+
   const handleCreate = async () => {
     if (!form.name || !form.email || !form.role) {
       const errorMsg = 'Name, email, and role are required';
@@ -70,16 +87,7 @@ const Employees = () => {
       });
       toast.success('Employee created successfully', `${form.name} has been added to the system`);
       setShowCreateModal(false);
-      setForm({
-        name: '',
-        email: '',
-        role: '',
-        status: 'Active',
-        phone: '',
-        department: '',
-        joiningDate: '',
-        address: '',
-      });
+      resetForm();
       await fetchEmployees();
     } catch (err) {
       const errorMessage = err.message || 'Failed to create employee';
@@ -87,6 +95,69 @@ const Employees = () => {
       toast.error('Failed to create employee', errorMessage);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleEdit = (employee) => {
+    setEditingEmployee(employee);
+    setForm({
+      name: employee.name || '',
+      email: employee.email || '',
+      role: employee.role || '',
+      status: employee.status || 'Active',
+      phone: employee.phone || '',
+      department: employee.department || '',
+      joiningDate: employee.joiningDate ? new Date(employee.joiningDate).toISOString().split('T')[0] : '',
+      address: employee.address || '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!form.name || !form.email || !form.role) {
+      const errorMsg = 'Name, email, and role are required';
+      setError(errorMsg);
+      toast.warning('Validation Error', errorMsg);
+      return;
+    }
+    setUpdating(true);
+    setError('');
+    try {
+      await api.updateEmployee(editingEmployee._id, {
+        name: form.name,
+        email: form.email,
+        role: form.role,
+        status: form.status,
+        phone: form.phone || undefined,
+        department: form.department || undefined,
+        joiningDate: form.joiningDate || undefined,
+        address: form.address || undefined,
+      });
+      toast.success('Employee updated successfully', `${form.name} has been updated`);
+      setShowEditModal(false);
+      setEditingEmployee(null);
+      resetForm();
+      await fetchEmployees();
+    } catch (err) {
+      const errorMessage = err.message || 'Failed to update employee';
+      setError(errorMessage);
+      toast.error('Failed to update employee', errorMessage);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingEmployee) return;
+    
+    try {
+      await api.deleteEmployee(deletingEmployee._id);
+      toast.success('Employee deleted successfully', `${deletingEmployee.name} has been removed`);
+      setDeletingEmployee(null);
+      await fetchEmployees();
+    } catch (err) {
+      const errorMessage = err.message || 'Failed to delete employee';
+      toast.error('Failed to delete employee', errorMessage);
     }
   };
 
@@ -136,11 +207,12 @@ const Employees = () => {
       {error && <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-sm">{error}</div>}
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
-        <div className="grid grid-cols-4 bg-gray-50 text-xs font-semibold text-gray-600 px-4 py-3 uppercase tracking-wide">
+        <div className="grid grid-cols-5 bg-gray-50 text-xs font-semibold text-gray-600 px-4 py-3 uppercase tracking-wide">
           <span>Name</span>
           <span>Role</span>
           <span>Email</span>
           <span className="text-right">Status</span>
+          <span className="text-right">Actions</span>
         </div>
         <div className="divide-y divide-gray-100">
           {loading && <div className="px-4 py-3 text-sm text-gray-500">Loading...</div>}
@@ -149,7 +221,7 @@ const Employees = () => {
           )}
           {!loading &&
             employees.map((emp) => (
-              <div key={emp._id || emp.email} className="grid grid-cols-4 items-center px-4 py-3 text-sm">
+              <div key={emp._id || emp.email} className="grid grid-cols-5 items-center px-4 py-3 text-sm hover:bg-gray-50 transition">
                 <div className="flex items-center gap-3 font-semibold text-gray-900">
                   <span className="p-2 rounded-full bg-indigo-50 text-indigo-600">
                     <FiUser />
@@ -170,6 +242,22 @@ const Employees = () => {
                     {emp.status}
                   </span>
                 </span>
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    onClick={() => handleEdit(emp)}
+                    className="p-2 rounded-lg border border-gray-200 text-indigo-600 hover:bg-indigo-50 transition"
+                    title="Edit"
+                  >
+                    <FiEdit2 />
+                  </button>
+                  <button
+                    onClick={() => setDeletingEmployee(emp)}
+                    className="p-2 rounded-lg border border-gray-200 text-red-600 hover:bg-red-50 transition"
+                    title="Delete"
+                  >
+                    <FiTrash2 />
+                  </button>
+                </div>
               </div>
             ))}
         </div>
@@ -256,6 +344,140 @@ const Employees = () => {
                 className="flex-1 px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition disabled:opacity-60"
               >
                 {creating ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editingEmployee && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">Edit Employee</h3>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingEmployee(null);
+                  resetForm();
+                }}
+                className="text-gray-500 hover:text-gray-700 font-semibold"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="grid gap-3">
+              <input
+                value={form.name}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                placeholder="Full name"
+                className="px-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <input
+                value={form.email}
+                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                placeholder="Email"
+                className="px-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <input
+                value={form.role}
+                onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
+                placeholder="Role"
+                className="px-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <input
+                value={form.phone}
+                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                placeholder="Phone (optional)"
+                className="px-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <input
+                value={form.department}
+                onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))}
+                placeholder="Department (optional)"
+                className="px-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <input
+                type="date"
+                value={form.joiningDate}
+                onChange={(e) => setForm((p) => ({ ...p, joiningDate: e.target.value }))}
+                className="px-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <textarea
+                value={form.address}
+                onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
+                placeholder="Address (optional)"
+                rows={2}
+                className="px-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <select
+                value={form.status}
+                onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
+                className="px-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="Active">Active</option>
+                <option value="Probation">Probation</option>
+                <option value="Notice">Notice</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingEmployee(null);
+                  resetForm();
+                }}
+                className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdate}
+                disabled={updating}
+                className="flex-1 px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition disabled:opacity-60"
+              >
+                {updating ? 'Updating...' : 'Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingEmployee && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">Delete Employee</h3>
+              <button
+                onClick={() => setDeletingEmployee(null)}
+                className="text-gray-500 hover:text-gray-700 font-semibold"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="py-4">
+              <p className="text-gray-700">
+                Are you sure you want to delete <span className="font-semibold">{deletingEmployee.name}</span>?
+              </p>
+              <p className="text-sm text-gray-500 mt-2">This action cannot be undone.</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeletingEmployee(null)}
+                className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition"
+              >
+                Delete
               </button>
             </div>
           </div>
